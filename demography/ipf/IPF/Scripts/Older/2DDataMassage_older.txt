@@ -1,0 +1,31 @@
+#Save the n-by-m matrix of data as a csv file, then read it in with
+#the first line (the read.table() command).  Change the pathname to
+#match where you put the csv file. Copy the line into R and run it.
+#Then put the appropriate numbers into the colc (column control) and
+#rowc (rowcontrol) vectors, and copy those lines into R, and run them.
+#Now, copy into R and run the Iterative Proportinal Fitting line
+#(ipf2()), and inspect the output: are the adjustments all zero?
+
+#Write it out as another csv file (again, you'll need to change the
+#pathname to something appropriate in the last, write.table() line).
+#If the adjustments were NOT all zero, you'll have to go into the csv
+#file and apply them.
+
+#Read in the function
+source("R:/RA/RAPOP/EDDIE/IPF/Functions/ipf2df.txt")
+
+#Read in the data
+seed <- read.table(file="R:/RA/RAPOP/EDDIE/IPF/HowTo/PracticeData/2DExample/Seed.csv", header=F, sep=",")
+seed #Inspect the seed you just read in: did you get the right numbers?
+
+rowc<-read.table(file="R:/RA/RAPOP/EDDIE/IPF/HowTo/PracticeData/2DExample/Row.csv", header=F, sep=",")
+rowc <- as.matrix(rowc)
+
+colc<-read.table(file="R:/RA/RAPOP/EDDIE/IPF/HowTo/PracticeData/2DExample/Col.csv", header=F, sep=",")
+colc <- as.matrix(colc)
+
+#Run the ipf2 function
+ipf2(rowc, colc, seed)
+
+#Run the ipf function and write it out
+write.table(ipf2(rowc, colc, seed)$fitted.table, file="R:/RA/RAPOP/EDDIE/IPF/HowTo/PracticeData/2DExample/Output.csv", sep=",")
