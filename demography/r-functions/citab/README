@@ -1,0 +1,5 @@
+Citab calculates confidence intervals for ACS PUMS data.  
+
+Read citab.R for more specific information.  Look at citab-test.R to see it in
+action.  Run `make test` to run citab-test.R and see if everything works as
+expected.
