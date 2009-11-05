@@ -4,13 +4,13 @@
 ## of ACS PUMS data, using the "replicate weights method" described in
 ## http://www.census.gov/acs/www/Downloads/2005-2007/AccuracyPUMS.pdf.  
 
-## input:
+## input parameters:
 ##   varname -- name of the column in the PUMS dataframe
 ##   x -- the dataframe
 ##   subset -- an optional boolean vector defining the subset of records to calculate
 ##   ci -- optional decimal for 
  
-## output list:
+## returns a list with the following fields:
 ##   tab -- the tabulated data without ci's
 ##   lowerb, upperb -- lower and upperbounds
 ##   se -- the standard error
@@ -19,7 +19,7 @@
 citab = function (varname, x, subset=NULL, ci=.95) {
 
   ## error checking
-  if (abs(ci) >= 1.0) {
+  if (abs(ci) >= 1.0 | abs(ci) <= 0.0) {
     print (sprintf("Error in citab(): bad CI: %s.  Stopping.", ci))
     stop()
   }
@@ -36,7 +36,8 @@ citab = function (varname, x, subset=NULL, ci=.95) {
   ## squares difference of that tabulation with the original ...
   for (i in 1:80){
     
-    ## Create a "formula" from the canonical names for the replicate weights -- pwgtpXX where XX is 1..80 ...
+    ## Create a "formula" from the canonical names for the replicate weights --
+    ## pwgtpXX where XX is 1..80 ...
     formt = sprintf("pwgtp%i ~ %s", i, varname)
 
     ## ... tabulate ...
@@ -46,7 +47,7 @@ citab = function (varname, x, subset=NULL, ci=.95) {
     cT = cT + (t-T)^2
   }
   
-  ## ... calculate se ...
+  ## ... calculate SE ...
   se = sqrt( (4/80)*cT )
 
   ## ... (finally) get z multiplier to generate se and return list.
