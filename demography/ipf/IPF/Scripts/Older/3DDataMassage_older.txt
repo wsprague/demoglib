@@ -1,0 +1,130 @@
+##############
+
+#This requires the functions ipf3df() and ipf2d(), found in files
+#R:\RA\RAPOP\Nels\Iterative.Proportional.Fitting/ipf3df.R
+#and R:\RA\RAPOP\Nels\Iterative.Proportional.Fitting/ipf2.R,
+#respectively.
+
+#Read the data.
+data <- read.table(file="C:/Documents and Settings/broce8h/Desktop/Seed.csv",sep=',',header=F)
+
+##This next assumes that the data we read in has two columns of census
+##area number and age range number before the data.
+#data <-data [,3:8]
+
+#If there is a row of zeros, we have a problem: generally the control
+#for that row will NOT be zero.  Furthermore, the algorithm requires
+#dividing by the row sums, so we get division by zero.  Finally, the
+#algorithm adjusts each row and column at each step by multiplying.
+#Thus, zeros are ``locked in''.  This is a problem.  The best solution
+#seems to be to make each zero be 0.001 or so.
+
+fix.zeros <- function(x){
+	if(x==0){
+		x<-0.001}
+	else{
+		x<-x}}
+apply(data,c(1,2),fix.zeros)->data 
+
+#Massage the data into its 3-D format.  Since data is a data.frame, we
+#need to convert it to a matrix to avoid all sorts of nastyness.
+data <-array(t(as.matrix(data)),c(5,19,27))
+
+#Now we get the control matrices
+stack.control <- read.table(file="C:/Documents and Settings/broce8h/Desktop/Stack.csv",sep=',',header=F)
+stack.control <- as.matrix(stack.control)
+
+col.control <- read.table(file="C:/Documents and Settings/broce8h/Desktop/Col.csv",sep=',',header=F)
+col.control <- as.matrix(col.control)
+
+row.control <- read.table(file="C:/Documents and Settings/broce8h/Desktop/Row.csv",sep=',',header=F)
+row.control <- as.matrix(row.control)
+
+result <- ipf3df(row.control, col.control, stack.control, data) 
+
+
+############
+#Now we have the 3D result, but we can't really apply the 3D corrections.
+#So, we will run it through the 2D process, to reduce the corrections to 
+#one dimension.
+
+#Have to guard against rows of zeros in the result.
+result$fitted.table <- apply(result$fitted.table,c(1,2,3),fix.zeros)
+
+adjusted.seed <- array(0,c(5,19,27))
+for (i in 1:27){
+	print(i)
+	adjusted.seed[,,i] <- ipf2(col.control[i,],row.control[i,],result$fitted.table[,,i])$fitted.table
+	}
+
+#Compute adjustments for each Census Area:
+#This entire for loop, on the next 6 lines, must be run as a group.
+for (i in 1:27){
+	print(paste("Census Area ",i))
+	print(col.control[i,]-apply(adjusted.seed[,,i],1,sum))
+	print(row.control[i,]-apply(adjusted.seed[,,i],2,sum))
+	print("");print("")
+	} 
+
+#Write out the adjusted seed as a 6 by 513 CSV for six races (or a 5
+#by 513 for 5 races) then adjust it by hand in Excel, then read it
+#back in.  If we're using the older data with only 18 age groups, it's
+#6 by 486 or so.  The (6,513) in ``matrix(adjusted.seed,c(6,513))'' in
+#the next line is the number of races which you will have to change.
+
+write.table(t(matrix(adjusted.seed,c(5,513))), file="C:/Documents and Settings/broce8h/Desktop/adjusted_seed.csv", row.names=T, sep=',', col.names=NA)
+
+#Read it back in after editing, and check it again.
+adjusted.seed <- read.table(file="R:\\RA\\RAPOP\\EDDIE\\IPF\\IPFCARACEAlone_0915\\adjusted_seed.csv",sep=',',header=T)
+##if you've copied on two columns (CA numbers and age numbers)
+##(strongly recommended), you'll need to do this:
+adjusted.seed <- adjusted.seed[,3:8]
+##and you'll need to do this in any event.
+#The (6,19,27) in ``matrix(adjusted.seed,c(6,513))'' in
+#the next line is the number of races which you will have to change.
+adjusted.seed <- array(t(as.matrix(adjusted.seed)),c(6,19,27))
+
+#This entire for loop, on the next 6 lines, must be run as a group.
+for (i in 1:27){
+	print(paste("Census Area ",i))
+	print(col.control[i,]-apply(adjusted.seed[,,i],1,sum))
+	print(row.control[i,]-apply(adjusted.seed[,,i],2,sum))
+	print("");print("")
+	} 
+
+#Now, we compute the adjustments to be sprinkled and stuffed into Anchorage:
+stack.control-apply(adjusted.seed,c(2,1),sum)
+#First check that it sums to zero both ways:
+apply(stack.control-apply(adjusted.seed,c(2,1),sum),1,sum)
+apply(stack.control-apply(adjusted.seed,c(2,1),sum),2,sum)
+#Then apply it:
+adjusted.seed[,,3]+t(stack.control-apply(adjusted.seed,c(2,1),sum)) #is it negative?
+
+##IF there are negative people in Anchorage, we'll have to apply some
+##of the corrections elsewhere.  That's most likely to happen in the
+##non-white young and elderly (especially the elderly!).  Using the 3D
+##adjustment _first_ seems to obviate the need for this, but it
+##doesn't hurt to check.  Probably have to look in Fairbanks, Mat-Su
+##and Juneau for places to remove people.  After taking care of it, go
+##back to the ``#Read it back in after editing'' section and re-read
+##the adjusted.seed, recheck it, and recompute, et cetera.
+
+#Now apply it for real, and write it out:
+adjusted.seed[,,3]+t(stack.control-apply(adjusted.seed,c(2,1),sum)) -> adjusted.seed[,,3]
+
+write.table(t(matrix(adjusted.seed,c(6,513))), file="R:\\RA\\RAPOP\\EDDIE\\IPF\\IPFCARACEAlone_0915\\IPFCARACE0915Result.csv", row.names=T, sep=',', col.names=NA)
+	
+
+###############
+#This code checks whether we've met all our goals.
+
+stack.control-apply(adjusted.seed,c(2,1),sum)
+col.control-apply(adjusted.seed,c(3,1),sum)
+row.control-apply(adjusted.seed,c(3,2),sum)
+
+#If it doesn't add up along all three axes, we have a problem.  To
+#deal with it, tweak the indicated cells.  E.g., for the 2003 bridge
+#race series for females, the third sum (along the race axis) showed
+#that one woman needed to be moved from age group 11 to age group 7 in
+#Yakutat, and the converse in Anchorage).  Doing that made everything
+#work.

@@ -1,0 +1,68 @@
+##################################
+##Nels' 3d script, modified for 4d
+##################################
+
+pup<-read.table(file="C:/Documents and Settings/BROCE8H/Desktop/Seed.csv", header=FALSE,sep=",")
+
+fix.zeros <- function(n)
+	{if(n==0){n<-0.001}else{n<-n}}
+
+pup<-apply(pup,c(1,2),fix.zeros) 
+
+pup<-array(t(as.matrix(pup)),c(6,19,2,27))
+
+chow1 <- read.table(file="C:/Documents and Settings/BROCE8H/Desktop/Margin1.csv",sep=',',header=F)
+chow1 <- array(t(as.matrix(chow1)),c(19,2,27))
+
+chow2 <- read.table(file="C:/Documents and Settings/BROCE8H/Desktop/Margin2.csv",sep=',',header=F)
+chow2 <- array(t(as.matrix(chow2)),c(6,19,2))
+
+chow3 <- read.table(file="C:/Documents and Settings/BROCE8H/Desktop/Margin3.csv",sep=',',header=F)
+chow3 <- array(t(as.matrix(chow3)),c(6,2,27))
+
+chow4 <- read.table(file="C:/Documents and Settings/BROCE8H/Desktop/Margin4.csv",sep=',',header=F)
+chow4 <- array(t(as.matrix(chow4)),c(6,19,27))
+
+result <- ipf4(chow1, chow2, chow3, chow4, pup) 
+
+result$fitted.table
+#rounding is turned off in ipf4 right now, so the results has non-integers
+
+write.table(t(matrix(result$fitted.table,c(6,19,2,27))),file="C:/Documents and Settings/BROCE8H/Desktop/RoundOutput.csv",sep=",")
+
+#####################
+##Controlled Rounding
+#####################
+##This is not the correct Controlled Rounding for dealing with multi-way tables
+##If I use it, I should place it in the ipf4 function, where traditional rounding was before
+##It doesn't reduce my corrections 
+##A copy of an email regarding the Census Bureau's use of this "controlled rounding" is at:
+##http://www.demog.berkeley.edu/~eddieh/4DIPF/Sources/ControlledRounding/RoundingEmail.txt
+#
+#contround<-function(origvalue)
+#	{
+#value<-origvalue
+#newval<-value
+#for(i in 2:length(newval))
+#	{newval[i]<-value[i]+(newval[i-1]-round(newval[i-1]))}
+#round(newval)
+#	}
+#
+#controundresult <- contround(result$fitted.table)
+#
+##################################
+##Correction Needed After Rounding
+##################################
+##Nels recognized that rounding on 3+ dimensions is an advanced problem
+##Nels would run 2dipf on the output to reduce the corrections to 1 dimension, print them out, then correct any remaining errors by hand 
+##Can see corrections to be made in result$chow1.adj, result$chow2.adj... or just result
+##Nels' instructions for this method are at: http://www.demog.berkeley.edu/~eddieh/4DIPF/Sources/HowTo/3D.IPF.Howto.doc
+##Not bad, as the marginal sides would be 27,19,6,2 and in 3d (29,19,6) it took me about 1/2 hr 
+##Would perhaps save time and money to do it by hand, compared to contracting or creating a 3+ dimensional controlled rounding algorithm
+##Rounding by hand should be a straight-forward five step process:
+##1) We take RaceXSexXCA and put at top of each respective (sex specified) CA
+##2) We take AgeXSexXCA and put along side of each respective (sex specified) CA
+##3) Create columns and rows with the difference between our outcome and the required marginal values  
+##4) Adjust to make each difference equal zero
+##5) Check that they match sex-specified CA totals
+##write.table(t(matrix(result$fitted.table,c(2,2,2,2))), file="R:/.../4DResult.csv", row.names=T, sep=',', col.names=T)
