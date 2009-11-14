@@ -51,8 +51,6 @@ $_$ language sql;
 
 select * from get_nearby_tracts('97215',5);
 
-
-
 -- and joining using geographic criteria.
 
 create table crosswalk as 
@@ -61,9 +59,10 @@ create table crosswalk as
 		from orwa_zp a , orwa_tr b
 		where st_intersects(a.the_geom, b.the_geom);
 create index crosswalk_geom_idx on crosswalk using gist (the_geom);
+create index crosswalk_zip_idx on crosswalk (zip);
 update crosswalk set propzip = area(the_geom) / area(zip_geom);
 update crosswalk set proptract = area(the_geom) / area(tract_geom);
-select zip, tractfips, proptract, propzip from crosswalk order by zip, tractfips;
+select zip, tractfips, proptract, propzip from crosswalk where zip in ('97215', '97405') order by zip, tractfips;
 
 
 ROLLBACK;
