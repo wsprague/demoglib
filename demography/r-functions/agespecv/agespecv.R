@@ -38,7 +38,7 @@ agespecv = function (data, agev, weightv=NULL, eventv=NULL, partv=NULL, period=1
   require(ggplot2)
   require(lattice)
   
-  ## calc rates
+  ## calc rates -- numerator, ...
   if (is.null(partv) & is.null(eventv)) { # age dist, no groups
     ;
   } else if (is.null(partv) & !is.null(eventv)) { #age spec rate, no groups
@@ -52,12 +52,13 @@ agespecv = function (data, agev, weightv=NULL, eventv=NULL, partv=NULL, period=1
     events = xtabs(eventsf, data)
     num = events['TRUE',,]
   }
+  ## ... denominator + division
   den = colSums(events)*period 
   rates = num / den
   ratesdf = as.data.frame(rates)
   ratesdf$age = levels(data[[agev]])
-  
-  return(list(num=num, den=den, rates=rates, ratesdf=ratesdf))  
+
+  return(list(num=num, den=den, rates=rates, ratesdf=ratesdf)) 
   
   ## make graph
   if (! is.null(filename)){
