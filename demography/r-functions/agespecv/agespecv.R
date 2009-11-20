@@ -52,32 +52,27 @@ agespecv = function (data, agev, weightv=NULL, eventv=NULL, partv=NULL, period=1
     events = xtabs(eventsf, data)
     num = events['TRUE',,]
   }
+  
   den = colSums(events)*period 
   rates = num / den
   ratesdf = as.data.frame(rates)
+  #colnames(ratesdf) = colnames(rates)
+
   ratesdf$age = levels(data[[agev]])
-  
-  return(list(num=num, den=den, rates=rates, ratesdf=ratesdf))  
+  print(colnames(ratesdf))
   
   ## make graph
   if (! is.null(filename)){
     pdf(filename)
-    g = ggplot() +
-      layer(data = ratesdf, mapping = aes(x = age, y = rates), geom = "point", stat="identity") +
-      layer(data = ratesdf, mapping = aes(x = age, y = rates), geom = "smooth", stat = "smooth", method = loess)
-    print(g)
+  } 
+  g = ggplot() +
+    layer(data = ratesdf, mapping = aes(x = age, y = rates), geom = "point", stat="identity") +
+      layer(data = ratesdf, mapping = aes(x = age, y = rates, group=1), geom = "smooth", stat = "smooth", method = loess)
+  print(g)
+  if (! is.null(filename)){
     dev.off()
-  } else {
-    g = plot( ratesdf$rates)
-    print(g)
-  }
-
-
+  } 
+ 
   
+  return (list(ratesdf=ratesdf, num=num, den=den))
 }
-
-
-
-
-
-  

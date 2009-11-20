@@ -7,8 +7,24 @@ pums.mex$MAR.LOGIC = pums.mex$MAR<=4    # ever married?
 
 pums.mex$MARF = factor(pums.mex$MAR, labels = c('mar', 'wid', 'div', 'sep', 'nev'))
 
-print(agespecv(data=pums.mex, agev='AGEF.EQUAL', weightv='pwgtp', eventv='FER.LOGIC', filename='~/public_html/foo1.pdf'))
-print(agespecv(data=pums.mex, agev='AGEF.EQUAL', weightv='pwgtp', eventv='MAR.LOGIC', partv='SEX', filename='~/public_html/foo2.pdf'))
-print(agespecv(data=pums.mex, agev='AGEF.EQUAL', weightv='pwgtp', eventv='FER.LOGIC', partv='MARF', filename='~/public_html/foo2.pdf'))
+print ('first\n\n')
+quartz()
+print(agespecv(data=pums.mex, agev='AGEF.EQUAL', weightv='pwgtp', eventv='FER.LOGIC')) # filename='~/public_html/foo1.pdf'))
+readline(prompt='enter')
+dev.off()
+
+if (FALSE){
+print ('second\n\n')
+print(agespecv(data=pums.mex, agev='AGEF.EQUAL', weightv='pwgtp', eventv='MAR.LOGIC', partv='SEX')) #filename='~/public_html/foo2.pdf'))
+readline(prompt='enter')
+dev.off()
+
+print('third\n\n')
+print(agespecv(data=pums.mex, agev='AGEF.EQUAL', weightv='pwgtp', eventv='FER.LOGIC', partv='MARF'))# filename='~/public_html/foo2.pdf'))
+readline(prompt='enter')
+dev.off()
+
+}
 
 rm("pums.mex")
+
