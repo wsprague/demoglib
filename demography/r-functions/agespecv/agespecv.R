@@ -52,12 +52,14 @@ agespecv = function (data, agev, weightv=NULL, eventv=NULL, partv=NULL, period=1
     rates = (events / expos)
     ratesdf = as.data.frame(rates)
     ratesdf$age = levels(data[[agev]])
-
+    ratesdf$group = rep('g1')
+    colnames (ratesdf) = c('rate', 'age', 'group')
+    
     ## Make the graph
-    g = ggplot() + layer(data = ratesdf, mapping = aes(x = age, y = rates), geom = "point", stat="identity") +
-      layer(data = ratesdf, mapping = aes(x = age, y = rates, group=1), geom = "smooth", stat = "smooth", method = loess)
+    g = ggplot() + layer(data = ratesdf, mapping = aes(x = age, y = rate, group=group), geom = "point", stat="identity") +
+      layer(data = ratesdf, mapping = aes(x = age, y = rate, group=1), geom = "smooth", stat = "smooth", method = loess)
     print(g)
-
+    
     ## return the rates and stuff as a list
     return(list(counts=counts,events=events, expos=expos, rates=rates, ratesdf=ratesdf))
     

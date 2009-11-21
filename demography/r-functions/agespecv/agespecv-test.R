@@ -10,6 +10,10 @@ pums.mex$MAR.LOGIC = pums.mex$MAR<=4    # ever married?
 ## Make factor variable for grouping
 pums.mex$MARF = factor(pums.mex$MAR, labels = c('mar', 'wid', 'div', 'sep', 'nev'))
 
+## Clear output
+try(system('rm /home/wsprague/public_html/foo1.pdf /home/wsprague/public_html/foo2.pdf /home/wsprague/public_html/foo3.pdf'))
+
+
 ## make pictures to test
 if (TRUE) {
   
