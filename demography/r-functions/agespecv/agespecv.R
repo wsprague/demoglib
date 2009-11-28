@@ -54,10 +54,17 @@ agespecv = function (data, agev, weightv=NULL, eventv=NULL, partv=NULL, period=1
     ratesdf$age = levels(data[[agev]])
     ratesdf$group = rep('g1')
     colnames (ratesdf) = c('rate', 'age', 'group')
+
+    ## Get rid of NA's
+    ratesdf = ratesdf[!is.na(ratesdf$rate),]
+    ratesdf = as.data.frame(lapply(ratesdf, function(x) x[,drop=TRUE]))
     
     ## Make the graph
-    g = ggplot() + layer(data = ratesdf, mapping = aes(x = age, y = rate, group=group), geom = "point", stat="identity") +
-      layer(data = ratesdf, mapping = aes(x = age, y = rate, group=1), geom = "smooth", stat = "smooth", method = loess)
+    g = ggplot() + layer(data = ratesdf, mapping = aes(x = age, y = rate, group=group),
+      geom = c("point", 'smooth'), stat="identity") +
+        layer(data = ratesdf, mapping = aes(x = age, y = rate, group=1), geom = "smooth", stat = "smooth") +
+          xlab('Age') + ylab('Rate')
+
     print(g)
     
     ## return the rates and stuff as a list
@@ -80,12 +87,20 @@ agespecv = function (data, agev, weightv=NULL, eventv=NULL, partv=NULL, period=1
     ratesdf = (melt(ratesdf))
     colnames (ratesdf) = c('age', 'group', 'rate')
 
+    ## Get rid of NAs
+    ratesdf = ratesdf[!is.na(ratesdf$rate),]
+    ratesdf = as.data.frame(lapply(ratesdf, function(x) x[,drop=TRUE]))
+    
     ## Make the graph
-    g = ggplot() + layer(data = ratesdf, mapping = aes(x = age, y = rate, group = group), geom = "point", stat="identity") +
-      layer(data = ratesdf, mapping = aes(x = age, y = rate, group=group), geom = "smooth", stat = "smooth", method = loess)
+    g = ggplot() + layer(data = ratesdf, mapping = aes(x = age, y = rate, color=group, group = group),
+      geom = c("point", 'smooth'), stat="identity") +
+        layer(data = ratesdf, mapping = aes(x = age, y = rate, group=group, color=group),
+              geom = "smooth", stat = "smooth") +
+                xlab('Age') + ylab('Rate')
     print(g)
 
     ## return the rates and stuff as a list
-    return(list(counts=counts,events=events, expos=expos, rates=rates, ratesdf=ratesdf))
+    return(list(counts=as.data.frame(counts),events=as.data.frame(events),
+                expos=as.data.frame(expos), rates=as.data.frame(rates), ratesdf=ratesdf))
   }
 }
