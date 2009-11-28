@@ -36,7 +36,7 @@
 agespecv = function (data, agev, weightv=NULL, eventv=NULL, partv=NULL, period=1, filename=NULL) {
 
   require(ggplot2)
-  require(lattice)
+  #require(lattice)
   
   ## calc rates -- numerator, ...
   if (is.null(partv) & is.null(eventv)) { # age dist, no groups
@@ -55,6 +55,11 @@ agespecv = function (data, agev, weightv=NULL, eventv=NULL, partv=NULL, period=1
     ratesdf$group = rep('g1')
     colnames (ratesdf) = c('rate', 'age', 'group')
 
+    ## make a big df
+    alldf = ratesdf
+    alldf$exposures = expos
+    alldf$events = events
+    
     ## Get rid of NA's
     ratesdf = ratesdf[!is.na(ratesdf$rate),]
     ratesdf = as.data.frame(lapply(ratesdf, function(x) x[,drop=TRUE]))
@@ -68,7 +73,7 @@ agespecv = function (data, agev, weightv=NULL, eventv=NULL, partv=NULL, period=1
     print(g)
     
     ## return the rates and stuff as a list
-    return(list(counts=counts,events=events, expos=expos, rates=rates, ratesdf=ratesdf))
+    return(list(alldf=alldf, ratesdf=ratesdf))
     
   } else if (!is.null(partv) & is.null(eventv)){ # age dist, groups
     ;
@@ -86,7 +91,15 @@ agespecv = function (data, agev, weightv=NULL, eventv=NULL, partv=NULL, period=1
     ## reshape -- melt is maybe not the best, but at least it makes sense 
     ratesdf = (melt(ratesdf))
     colnames (ratesdf) = c('age', 'group', 'rate')
+    exposdf = melt(expos)
+    colnames(exposdf)  = c('age', 'group', 'exposures')
+    eventsdf = melt(events)
+    colnames(eventsdf) = c('age', 'group', 'events')
 
+    ## make a big df (god I wish there were a proc SQL)
+    alldf = merge (exposdf, eventsdf)
+    alldf = merge (alldf, ratesdf)
+    
     ## Get rid of NAs
     ratesdf = ratesdf[!is.na(ratesdf$rate),]
     ratesdf = as.data.frame(lapply(ratesdf, function(x) x[,drop=TRUE]))
@@ -99,8 +112,7 @@ agespecv = function (data, agev, weightv=NULL, eventv=NULL, partv=NULL, period=1
                 xlab('Age') + ylab('Rate')
     print(g)
 
-    ## return the rates and stuff as a list
-    return(list(counts=as.data.frame(counts),events=as.data.frame(events),
-                expos=as.data.frame(expos), rates=as.data.frame(rates), ratesdf=ratesdf))
+    ## return the rates and stuff
+    return(list(alldf=alldf, ratesdf=ratesdf))
   }
 }
