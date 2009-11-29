@@ -36,7 +36,7 @@
 agespecv = function (data, agev, weightv=NULL, eventv=NULL, partv=NULL, period=1, filename=NULL) {
 
   require(ggplot2)
-  #require(lattice)
+  require(lattice)
   
   ## calc rates -- numerator, ...
   if (is.null(partv) & is.null(eventv)) { # age dist, no groups
@@ -51,7 +51,7 @@ agespecv = function (data, agev, weightv=NULL, eventv=NULL, partv=NULL, period=1
     expos = colSums(counts)*period 
     rates = (events / expos)
     ratesdf = as.data.frame(rates)
-    ratesdf$age = levels(data[[agev]])
+    ratesdf$age = ordered(levels(data[[agev]]))
     ratesdf$group = rep('g1')
     colnames (ratesdf) = c('rate', 'age', 'group')
 
@@ -67,13 +67,17 @@ agespecv = function (data, agev, weightv=NULL, eventv=NULL, partv=NULL, period=1
     ## Make the graph
     g = ggplot() + layer(data = ratesdf, mapping = aes(x = age, y = rate, group=group),
       geom = c("point", 'smooth'), stat="identity") +
-        layer(data = ratesdf, mapping = aes(x = age, y = rate, group=1), geom = "smooth", stat = "smooth") +
+        layer(data = ratesdf, mapping = aes(x = age, y = rate, group=1), geom = "smooth", stat = "identity") +
           xlab('Age') + ylab('Rate')
-
     print(g)
+
+    ##print(barchart(rate~age, data=ratesdf, horizontal=FALSE))
+    ##plot(as.numeric(ratesdf$age), ratesdf$rate, type='l', labels=FALSE)
+    ##axis(side=1,labels=ratesdf$age, at=(as.numeric(ratesdf$age)))
     
+         
     ## return the rates and stuff as a list
-    return(list(alldf=alldf, ratesdf=ratesdf))
+    return(alldf=alldf)
     
   } else if (!is.null(partv) & is.null(eventv)){ # age dist, groups
     ;
@@ -86,8 +90,8 @@ agespecv = function (data, agev, weightv=NULL, eventv=NULL, partv=NULL, period=1
     expos = colSums(counts)*period 
     rates = (events / expos)
     ratesdf = as.data.frame(rates)
-    ratesdf$age = levels(data[[agev]])
-
+    ratesdf$age = ordered(levels(data[[agev]]))
+        
     ## reshape -- melt is maybe not the best, but at least it makes sense 
     ratesdf = (melt(ratesdf))
     colnames (ratesdf) = c('age', 'group', 'rate')
@@ -108,11 +112,11 @@ agespecv = function (data, agev, weightv=NULL, eventv=NULL, partv=NULL, period=1
     g = ggplot() + layer(data = ratesdf, mapping = aes(x = age, y = rate, color=group, group = group),
       geom = c("point", 'smooth'), stat="identity") +
         layer(data = ratesdf, mapping = aes(x = age, y = rate, group=group, color=group),
-              geom = "smooth", stat = "smooth") +
+              geom = "smooth", stat = "identity") +
                 xlab('Age') + ylab('Rate')
     print(g)
-
+    
     ## return the rates and stuff
-    return(list(alldf=alldf, ratesdf=ratesdf))
+    return(alldf=alldf)
   }
 }
